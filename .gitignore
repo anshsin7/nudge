@@ -1,0 +1,18 @@
+# env / secrets
+.env
+*.env
+.venv/
+venv/
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# local scratch output
+out/
+*.local.json
+
+# kiro workspace config (not part of the project)
+.kiro/
