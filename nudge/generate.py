@@ -19,7 +19,9 @@ from .schema import UserProfile, Target, Voice
 
 GENERATE_SYSTEM = """\
 You write short phone-notification reminders that sound exactly like a specific \
-person's friend — or their own inner voice — texting them.
+person's close friend — the kind of friend who's a bit of a menace but clearly \
+has your back — texting them. The audience is Gen Z; the texts should feel like \
+a real group-chat message, not an app.
 
 You are given a STYLE PROFILE and some MEMORY. Match the style precisely:
 capitalization, slang, emoji frequency, sentence length, punctuation quirks.
@@ -28,11 +30,26 @@ Make each nudge:
 - short (fits a lock screen — one line, ~4-14 words)
 - reference the SPECIFIC goal and, when natural, the personal reason/context
 - feel fresh and varied — never a template, never corporate ("Time to...")
-- land like a nudge from someone who cares, not a scold
+- land like a nudge from someone who cares, lightly roasting > scolding
+
+Gen Z texting craft (match the user's profile; don't force any of these):
+- lowercase by default unless the profile says they capitalize
+- dry, deadpan, slightly chaotic humor; understatement over hype
+- natural slang only — use the slang THEY actually used in `slang`; do not pile on
+  extra slang they never said
+- it's fine to be a little unhinged/affectionate ("bestie no", "babe. water.")
+- questions and callouts land well ("when did you last drink water. be honest")
+
+ANTI-CRINGE RULES (most important — breaking these ruins it):
+- Do NOT try too hard. One slang term per message is usually plenty.
+- NEVER use dated/boomer-ified slang or hashtags: no "YOLO", "on fleek", "#blessed",
+  "hello fellow kids" energy, no explaining the joke.
+- Don't stack 3+ emojis. Don't use emojis at all if emoji_frequency is "none"/"low".
+- If in doubt, fewer words + drier tone. Cringe comes from effort showing.
 
 Hard rules:
 - No health/medical claims or diagnoses. No guilt-tripping or shaming.
-- Nothing mean, anxiety-inducing, or about appearance/weight.
+- Nothing mean, anxiety-inducing, or about appearance/weight/calories.
 - Keep it to the one goal given.
 
 Return ONLY a JSON array of strings. No prose, no fences.
@@ -74,7 +91,7 @@ def generate_nudges(
         temperature=1.0,  # we want variety here
     )
     candidates = _parse_array(raw)
-    return [c for c in candidates if is_safe(c)]
+    return [c for c in candidates if is_safe(c) and not is_cringe(c)]
 
 
 # ---- safety pass ----------------------------------------------------------
@@ -85,6 +102,14 @@ _BANNED = re.compile(
     re.IGNORECASE,
 )
 
+# Dated / try-hard slang that instantly reads as "adult pretending to be Gen Z".
+# A nudge containing these is dropped from the pool.
+_CRINGE = re.compile(
+    r"\b(yolo|on fleek|bae|swag|totes|amazeballs|hello fellow kids|epic win|"
+    r"groovy|hashtag|#\w+)\b",
+    re.IGNORECASE,
+)
+
 
 def is_safe(text: str) -> bool:
     if not text or len(text) > 180:
@@ -92,6 +117,15 @@ def is_safe(text: str) -> bool:
     if _BANNED.search(text):
         return False
     return True
+
+
+def is_cringe(text: str) -> bool:
+    """True if the nudge reads as try-hard/dated — filtered out of the pool."""
+    if _CRINGE.search(text):
+        return True
+    # too many emoji stacked = trying too hard
+    emoji = sum(1 for ch in text if ord(ch) > 0x2190)
+    return emoji >= 3
 
 
 def _parse_array(raw: str) -> list[str]:

@@ -85,11 +85,11 @@ def _mock_response(prompt: str, system: str | None, json_mode: bool) -> str:
         )
     if json_mode:  # nudge generation
         return (
-            '["lowkey go grab water before ur head starts pounding again",'
-            '"water check. u have not moved from that desk in forever ngl",'
-            '"hydrate real quick, the back pain already called u once today",'
-            '"ok but when did u last drink water. be honest",'
-            '"little water break, future u says thanks fr"]'
+            '["babe. water. ur head is gonna file a complaint again",'
+            '"when did u last drink water. be so honest rn",'
+            '"go sip something before the 3pm headache clocks in",'
+            '"ur desk is not gonna hydrate u. i checked",'
+            '"quick water run, future u is literally begging fr"]'
         )
     # onboarding chat turn
     return "haha fair. so walk me through a normal weekday for you — when do you usually wake up?"
